@@ -1,5 +1,5 @@
 from typing import Optional
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 from pydantic import BaseModel, validator
 
@@ -27,6 +27,14 @@ class SubMenuCreate(AbstractEntity):
 class DishCreate(AbstractEntity):
     price: str
 
+    @validator('price')
+    def validate_price(cls, value):
+        try:
+            decimal_price = Decimal(value).quantize(Decimal('0.01'))
+        except InvalidOperation:
+            raise ValueError("price is invalid")
+        return decimal_price
+
 
 class MenuGet(MenuCreate, IdMixin):
     submenus_count: int = 0
@@ -38,8 +46,5 @@ class SubMenuGet(SubMenuCreate, IdMixin):
 
 
 class DishGet(DishCreate, IdMixin):
-    
-    @validator('price')
-    def round_prive(cls, value):
-        return Decimal(value).quantize(Decimal('0.01'))
+    pass
 

@@ -34,7 +34,6 @@ def get_submenus_count_for_menu_list(session: Session) -> dict:
     result_dict = {}  # ключ - menu_id, значение - количество подменю
     for key, value in query_result:
         result_dict[key] = value
-    print(result_dict)
     return result_dict
 
 
