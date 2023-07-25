@@ -1,0 +1,8 @@
+*.pyc
+*~
+__pycache__
+venv/
+*.bak
+*.dat
+*.dir
+_README.md
