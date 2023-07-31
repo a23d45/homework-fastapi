@@ -26,6 +26,7 @@ def current_menu():
     session = next(get_session())
     return session.query(Menu).one()
 
+
 @pytest.fixture(scope="module")
 def current_submenu():
     session = next(get_session())
