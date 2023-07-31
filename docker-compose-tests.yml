@@ -1,0 +1,28 @@
+version: "3.7"
+
+services:
+  db:
+    image: postgres:15.1-alpine
+    container_name: db_test
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d homework"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: always
+
+  tests:
+    build:
+      context: .
+      dockerfile: Dockerfile-tests
+    container_name: tests
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+
+      

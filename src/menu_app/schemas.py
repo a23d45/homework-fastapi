@@ -1,7 +1,7 @@
-from typing import Optional
+from typing import Union
 from decimal import Decimal, InvalidOperation
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 
 
 class AbstractEntity(BaseModel):
@@ -10,9 +10,9 @@ class AbstractEntity(BaseModel):
 
 
 class IdMixin(BaseModel):
-    id: int
+    id: Union[int, str]
 
-    @validator('id')
+    @field_validator('id')
     def int_to_str(cls, value):
         return str(value)
     
@@ -24,10 +24,11 @@ class MenuCreate(AbstractEntity):
 class SubMenuCreate(AbstractEntity):
     pass
 
-class DishCreate(AbstractEntity):
-    price: str
 
-    @validator('price')
+class DishCreate(AbstractEntity):
+    price: Union[str, Decimal]
+
+    @field_validator('price')
     def validate_price(cls, value):
         try:
             decimal_price = Decimal(value).quantize(Decimal('0.01'))

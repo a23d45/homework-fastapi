@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError 
-from sqlalchemy.orm.exc import NoResultFound 
+from sqlalchemy.orm.exc import NoResultFound
 
 from database import get_session
 from . import crud
@@ -50,12 +50,12 @@ def menu_detail(menu_id: int, session=Depends(get_session)):
     return menu_obj
 
 
-@router.patch('/{menu_id}', response_model=MenuCreate)
+@router.patch('/{menu_id}', response_model=MenuGet)
 def menu_patch(menu: MenuCreate, menu_id: int, 
                session=Depends(get_session)):
     try:
         menu_obj = crud.update_menu_by_id(session, menu_id, menu)
-    except IntegrityError:
+    except (IntegrityError, NoResultFound):
         session.rollback()
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -108,13 +108,13 @@ def submenu_detail(menu_id: int, submenu_id: int,
     return submenu_obj
 
 
-@router.patch('/{menu_id}/submenus/{submenu_id}', response_model=SubMenuCreate)
+@router.patch('/{menu_id}/submenus/{submenu_id}', response_model=SubMenuGet)
 def submenu_patch(submenu: SubMenuCreate, menu_id: int, 
                   submenu_id: int, session=Depends(get_session)):
     try:
         submenu_obj = crud.update_submenu_by_id(session, menu_id,
                                              submenu_id, submenu)
-    except IntegrityError:
+    except (IntegrityError, NoResultFound):
         session.rollback()
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -171,14 +171,14 @@ def dish_detail(menu_id: int, submenu_id: int, dish_id: int,
 
 
 @router.patch('/{menu_id}/submenus/{submenu_id}/dishes/{dish_id}',
-              response_model=DishCreate)
+              response_model=DishGet)
 def dish_patch(dish: DishCreate, 
                menu_id: int, submenu_id: int, dish_id: int, 
                session=Depends(get_session)):
     try:
         dish_obj = crud.update_dish_by_id(session, menu_id, submenu_id,
                                           dish_id, dish)
-    except IntegrityError:
+    except (IntegrityError, NoResultFound):
         session.rollback()
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
