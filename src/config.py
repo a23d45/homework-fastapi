@@ -10,3 +10,13 @@ DB_PORT = os.environ.get('DB_PORT')
 DB_NAME = os.environ.get('DB_NAME')
 DB_USER = os.environ.get('DB_USER')
 DB_PASS = os.environ.get('DB_PASS')
+
+MODE= os.environ.get('MODE')
+print(DB_HOST)
+print(DB_PORT)
+print(DB_NAME)
+print(DB_USER)
+print(DB_PASS)
+
+REDIS_HOST = os.environ.get('REDIS_HOST')
+REDIS_PORT = os.environ.get("REDIS_PORT")

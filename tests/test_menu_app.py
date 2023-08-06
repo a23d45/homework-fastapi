@@ -307,8 +307,6 @@ def test_failed_update_dish(client, current_menu,
     assert response.status_code == 409
 
 
-
-
 def test_failed_get_dish_detail(client, current_menu, 
                                 current_submenu, current_dish):
     response = client.get(

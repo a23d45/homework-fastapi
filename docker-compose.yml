@@ -12,9 +12,22 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+    ports:
+      - "5432:5432"
     restart: always
     volumes:
       - postgres_data:/var/lib/postgresql/data/
+
+  redis:
+    image: redis:7.0-alpine
+    container_name: redis_app
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: always
 
   app:
     build:
@@ -31,6 +44,8 @@ services:
       - 8000:8000
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
 volumes:
