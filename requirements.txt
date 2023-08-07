@@ -6,3 +6,4 @@ sqlalchemy
 pytest
 redis
 pytest-dotenv
+pre-commit
