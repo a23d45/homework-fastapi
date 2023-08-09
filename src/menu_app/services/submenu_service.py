@@ -41,7 +41,7 @@ class SubMenuService:
             new_submenu,
             menu_id
         )
-        self.__redis_cli.delete_menu(submenu_obj.menu_id)
+        self.__redis_cli.delete_submenu(menu_id, submenu_obj.menu_id)
         return submenu_obj
 
     def get_submenu_with_dishes_count(
@@ -49,7 +49,8 @@ class SubMenuService:
         menu_id: int,
         submenu_id: int
     ) -> SubMenu:
-        submenu_obj = self.__redis_cli.get_submenu(submenu_id)
+        submenu_obj = self.__redis_cli.\
+            get_submenu(menu_id, submenu_id)
         if not submenu_obj:
             submenu_obj = self.__submenu_repository.\
                 get_submenu_with_dishes_count(menu_id, submenu_id)
@@ -64,7 +65,7 @@ class SubMenuService:
     ) -> SubMenu:
         submenu_obj = self.__submenu_repository.\
             update_submenu_by_id(menu_id, submenu_id, item)
-        self.__redis_cli.delete_submenu(submenu_id)
+        self.__redis_cli.delete_submenu(menu_id, submenu_id)
         return submenu_obj
 
     def delete_submenu_by_id(
@@ -74,4 +75,4 @@ class SubMenuService:
     ) -> None:
         self.__submenu_repository.\
             delete_submenu_by_id(menu_id, submenu_id)
-        self.__redis_cli.delete_submenu(submenu_id)
+        self.__redis_cli.delete_submenu(menu_id, submenu_id)

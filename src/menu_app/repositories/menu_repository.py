@@ -52,7 +52,7 @@ class MenuRepository(BaseRepository):
             self.session.commit()
         except IntegrityError:
             self.session.rollback()
-            raise IntegrityError
+            raise ValueError('Ошибка при сохранении объекта')
 
         return menu_obj
 
@@ -90,7 +90,7 @@ class MenuRepository(BaseRepository):
             self.session.commit()
         except IntegrityError:
             self.session.rollback()
-            raise IntegrityError
+            raise ValueError('Ошибка при сохранении объекта')
         return self.get_menu_with_counts(menu_id)
 
     def delete_menu_by_id(self, menu_id: int) -> None:

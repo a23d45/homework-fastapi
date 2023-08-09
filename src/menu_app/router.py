@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 
 from .schemas import DishCreate, DishGet, MenuCreate, MenuGet, SubMenuCreate, SubMenuGet
@@ -26,7 +25,7 @@ def menu_create(
 ):
     try:
         menu_obj = menu_service.create_menu(new_menu)
-    except IntegrityError:
+    except ValueError:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
         )
@@ -56,7 +55,7 @@ def menu_patch(
 ):
     try:
         menu_obj = menu_service.update_menu_by_id(menu_id, menu)
-    except (IntegrityError, NoResultFound):
+    except (ValueError, NoResultFound):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
         )
@@ -97,7 +96,7 @@ def submenu_create(
     try:
         submenu_obj = submenu_service.\
             create_submenu(new_submenu, menu_id)
-    except IntegrityError:
+    except ValueError:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
         )
@@ -131,7 +130,7 @@ def submenu_patch(
     try:
         submenu_obj = submenu_service.\
             update_submenu_by_id(menu_id, submenu_id, submenu)
-    except (IntegrityError, NoResultFound):
+    except (ValueError, NoResultFound):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
         )
@@ -176,8 +175,8 @@ def dish_create(
 ):
     try:
         dish_obj = dish_service.\
-            create_dish(new_dish, submenu_id)
-    except IntegrityError:
+            create_dish(new_dish, menu_id, submenu_id)
+    except ValueError:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
         )
@@ -215,7 +214,7 @@ def dish_patch(
     try:
         dish_obj = dish_service.\
             update_dish_by_id(menu_id, submenu_id, dish_id, dish)
-    except (IntegrityError, NoResultFound):
+    except (ValueError, NoResultFound):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
         )

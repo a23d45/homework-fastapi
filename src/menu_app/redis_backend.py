@@ -15,22 +15,35 @@ class RedisBackend:
 
     def get_menu(self, menu_id: int) -> Menu | None:
         """Возвращает объект menu из кеша"""
-        menu_obj = self.__redis_cli.get(f'menu:{menu_id}')
+        menu_var = self.__get_menu_var_name(menu_id)
+        menu_obj = self.__redis_cli.get(menu_var)
         if menu_obj is None:
             return None
         return pickle.loads(menu_obj)
 
-    def get_submenu(self, submenu_id: int) -> SubMenu | None:
+    def get_submenu(
+        self,
+        menu_id: int,
+        submenu_id: int
+    ) -> SubMenu | None:
         """Возвращает объект submenu из кеша"""
-        submenu_obj = self.__redis_cli.\
-            get(f'submenu:{submenu_id}')
+        submenu_var = self.\
+            __get_submenu_var_name(menu_id, submenu_id)
+        submenu_obj = self.__redis_cli.get(submenu_var)
         if submenu_obj is None:
             return None
         return pickle.loads(submenu_obj)
 
-    def get_dish(self, dish_id: int) -> Dish | None:
+    def get_dish(
+            self,
+            menu_id: int,
+            submenu_id: int,
+            dish_id: int
+    ) -> Dish | None:
         """Возвращает объект dish из кеша"""
-        dish_obj = self.__redis_cli.get(f'dish:{dish_id}')
+        dish_var = self.\
+            __get_dish_var_name(menu_id, submenu_id, dish_id)
+        dish_obj = self.__redis_cli.get(dish_var)
         if dish_obj is None:
             return None
         return pickle.loads(dish_obj)
@@ -54,72 +67,101 @@ class RedisBackend:
             return None
         return pickle.loads(submenu_list)
 
-    def get_dish_list(self, submenu_id: int) \
-            -> list[Dish] | None:
+    def get_dish_list(
+        self,
+        menu_id: int,
+        submenu_id: int
+    ) -> list[Dish] | None:
         """
         Возвращает список объектов dish,
         которые относятся к объекту submenu, из кеша
         """
-        dish_list = self.__redis_cli.\
-            get(f'dish_list:{submenu_id}')
+        dish_list_var = self.\
+            __get_dish_list_var_name(menu_id, submenu_id)
+        dish_list = self.__redis_cli.get(dish_list_var)
         if dish_list is None:
             return None
         return pickle.loads(dish_list)
 
-    def delete_menu(self, menu_id: int) -> int:
+    def delete_menu(self, menu_id: int) -> None:
         """
         Удаляет объект menu, список объектов menu
         и связанные объекты из кеша
         """
         self.delete_menu_list()
-        self.delete_all_submenus()
-        self.delete_all_dishes()
-        return self.__redis_cli.delete(f'menu:{menu_id}')
+        self.delete_submenu_list(menu_id)
+        menu_var = self.__get_menu_var_name(menu_id)
+        invalid_keys = self.__redis_cli.keys(f'{menu_var}*')
+        if invalid_keys:
+            self.__redis_cli.delete(*invalid_keys)
 
-    def delete_submenu(self, submenu_id: int) -> int | None:
+    def delete_submenu(
+        self,
+        menu_id: int,
+        submenu_id: int
+    ) -> None:
         """
-        Удаляет объект submenu и список объектов submenu из кеша.
-        Также вызывает метод delete_menu
-        для связанного объекта menu.
+        Удаляет объект submenu, список объектов submenu
+        и связанные объекты из кеша
         """
-        submenu_obj = self.get_submenu(submenu_id)
-        if submenu_obj is None:
-            return None
-        self.delete_menu(submenu_obj.menu_id)
-        self.delete_submenu_list(submenu_obj.menu_id)
-        self.delete_all_dishes()
-        return self.__redis_cli.delete(f'submenu:{submenu_id}')
+        self.delete_menu_list()
+        self.delete_submenu_list(menu_id)
+        self.delete_dish_list(menu_id, submenu_id)
+        menu_var = self.__get_menu_var_name(menu_id)
+        submenu_var = self.\
+            __get_submenu_var_name(menu_id, submenu_id)
 
-    def delete_dish(self, dish_id: int) -> int | None:
-        """
-        Удаляет объект dish и список объектов dish из кеша.
-        Также вызывает метод delete_submenu
-        для связанного объекта submenu.
-        """
-        dish_obj = self.get_dish(dish_id)
-        if dish_obj is None:
-            return None
-        self.delete_dish_list(dish_obj.submenu_id)
-        self.delete_submenu(dish_obj.id)
-        return self.__redis_cli.delete(f'dish:{dish_id}')
+        invalid_keys = self.__redis_cli.keys(f'{submenu_var}*')
+        invalid_keys.append(menu_var)
+        self.__redis_cli.delete(*invalid_keys)
 
-    def delete_menu_list(self) -> int:
+    def delete_dish(
+        self,
+        menu_id: int,
+        submenu_id: int,
+        dish_id: int
+    ) -> None:
+        """
+        Удаляет объект dish, список объектов dish
+        и связанные объекты из кеша
+        """
+        self.delete_menu_list()
+        self.delete_submenu_list(menu_id)
+        self.delete_dish_list(menu_id, submenu_id)
+
+        menu_var = self.__get_menu_var_name(menu_id)
+        submenu_var = self.\
+            __get_submenu_var_name(menu_id, submenu_id)
+        dish_var = self.\
+            __get_dish_var_name(menu_id, submenu_id, dish_id)
+
+        self.__redis_cli.delete(menu_var)
+        self.__redis_cli.delete(submenu_var)
+        self.__redis_cli.delete(dish_var)
+
+    def delete_menu_list(self) -> None:
         """Удаляет список объектов menu из кеша"""
-        return self.__redis_cli.delete('menu_list')
+        self.__redis_cli.delete('menu_list')
 
-    def delete_submenu_list(self, menu_id: int) -> int:
+    def delete_submenu_list(self, menu_id: int) -> None:
         """
         Удаляет список объектов submenu,
         которые относятся к объекту menu, из кеша
         """
-        return self.__redis_cli.delete(f'submenu_list:{menu_id}')
+        self.__redis_cli.delete(f'submenu_list:{menu_id}')
 
-    def delete_dish_list(self, submenu_id: int) -> int:
+    def delete_dish_list(
+        self,
+        menu_id: int,
+        submenu_id: int
+    ) -> None:
         """
         Удаляет список объектов dish,
         которые относятся к объекту submenu,из кеша
         """
-        return self.__redis_cli.delete(f'dish_list:{submenu_id}')
+        dish_list_var = self.\
+            __get_dish_list_var_name(menu_id, submenu_id)
+        self.__redis_cli.delete(dish_list_var)
 
     def set_menu(self, menu_obj: Menu) -> None:
         """
@@ -127,8 +169,10 @@ class RedisBackend:
         и удаляет неактуальный кеш
         """
         self.delete_menu(menu_obj.id)
+
+        menu_var = self.__get_menu_var_name(menu_obj.id)
         self.__redis_cli.setex(
-            name=f'menu:{menu_obj.id}',
+            name=menu_var,
             value=pickle.dumps(menu_obj),
             time=self.TTL_CACHE
         )
@@ -138,21 +182,28 @@ class RedisBackend:
         Сохраняет в кеше объект submenu
         и удаляет неактуальный кеш
         """
-        self.delete_submenu(submenu_obj.id)
+        self.delete_submenu(submenu_obj.menu_id, submenu_obj.id)
+
+        submenu_var = self.\
+            __get_submenu_var_name(submenu_obj.menu_id, submenu_obj.id)
         self.__redis_cli.setex(
-            name=f'submenu:{submenu_obj.id}',
+            name=submenu_var,
             value=pickle.dumps(submenu_obj),
             time=self.TTL_CACHE
         )
 
-    def set_dish(self, dish_obj: Dish) -> None:
+    def set_dish(self, dish_obj: Dish, menu_id: int) -> None:
         """
         Сохраняет в кеше объект dish
         и удаляет неактуальный кеш
         """
-        self.delete_dish(dish_obj.id)
+        submenu_id = dish_obj.submenu_id
+
+        self.delete_dish(menu_id, submenu_id, dish_obj.id)
+        dish_var = self.\
+            __get_dish_var_name(menu_id, submenu_id, dish_obj.id)
         self.__redis_cli.setex(
-            name=f'dish:{dish_obj.id}',
+            name=dish_var,
             value=pickle.dumps(dish_obj),
             time=self.TTL_CACHE
         )
@@ -183,34 +234,50 @@ class RedisBackend:
     def set_dish_list(
         self,
         dish_list: list[Dish],
+        menu_id: int,
         submenu_id: int
     ) -> None:
         """
         Сохраняет в кеше список объектов dish,
         которые относятся к объекту submenu
         """
+        dish_list_var = self.\
+            __get_dish_list_var_name(menu_id, submenu_id)
         self.__redis_cli.setex(
-            name=f'dish_list:{submenu_id}',
+            name=dish_list_var,
             value=pickle.dumps(dish_list),
             time=self.TTL_CACHE
         )
 
-    def delete_all_submenus(self) -> None:
-        """Удаляет все подменю"""
-        submenu_keys = self.__redis_cli.keys('submenu:*')
-        submenu_keys += self.__redis_cli.keys('submenu_list:*')
-        if not submenu_keys:
-            return None
-        self.__redis_cli.delete(*submenu_keys)
-
-    def delete_all_dishes(self) -> None:
-        """Удаляет все блюда"""
-        dish_keys = self.__redis_cli.keys('dish:*')
-        dish_keys += self.__redis_cli.keys('dish_list:*')
-        if not dish_keys:
-            return None
-        self.__redis_cli.delete(*dish_keys)
-
     def flushdb(self) -> None:
         """Очищает всю базу данных"""
         self.__redis_cli.flushdb()
+
+    def __get_menu_var_name(self, menu_id: int) -> str:
+        """Генерирует имя переменной для объекта menu"""
+        return f'menu:{menu_id}'
+
+    def __get_submenu_var_name(
+        self,
+        menu_id: int,
+        submenu_id: int
+    ) -> str:
+        """Генерирует имя переменной для объекта submenu"""
+        return f'menu:{menu_id}:submenu:{submenu_id}'
+
+    def __get_dish_var_name(
+        self,
+        menu_id: int,
+        submenu_id: int,
+        dish_id: int
+    ) -> str:
+        """Генерирует имя переменной для объекта dish"""
+        return f'menu:{menu_id}:submenu:{submenu_id}:dish:{dish_id}'
+
+    def __get_dish_list_var_name(
+        self,
+        menu_id: int,
+        submenu_id: int,
+    ) -> str:
+        """Генерирует имя переменной для списка dish_list"""
+        return f'dish_list:{menu_id}:{submenu_id}'

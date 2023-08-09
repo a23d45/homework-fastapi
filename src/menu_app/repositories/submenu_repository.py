@@ -43,7 +43,7 @@ class SubMenuRepository(BaseRepository):
             self.session.commit()
         except IntegrityError:
             self.session.rollback()
-            raise IntegrityError
+            raise ValueError('Ошибка при сохранении объекта')
         return submenu_obj
 
     def get_submenu_by_id(
@@ -79,7 +79,7 @@ class SubMenuRepository(BaseRepository):
             self.session.commit()
         except IntegrityError:
             self.session.rollback()
-            raise IntegrityError
+            raise ValueError('Ошибка при сохранении объекта')
         return self.get_submenu_with_dishes_count(menu_id, submenu_id)
 
     def delete_submenu_by_id(

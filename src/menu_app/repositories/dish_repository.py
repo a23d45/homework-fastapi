@@ -32,7 +32,7 @@ class DishRepository(BaseRepository):
             self.session.commit()
         except IntegrityError:
             self.session.rollback()
-            raise IntegrityError
+            raise ValueError('Ошибка при сохранении объекта')
         return dish_obj
 
     def get_dish_by_id(
@@ -57,6 +57,7 @@ class DishRepository(BaseRepository):
             self.session.commit()
         except IntegrityError:
             self.session.rollback()
+            raise ValueError('Ошибка при сохранении объекта')
         return dish_obj
 
     def delete_dish_by_id(
