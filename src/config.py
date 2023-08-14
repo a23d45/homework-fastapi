@@ -14,3 +14,7 @@ MODE = os.environ.get('MODE')
 
 REDIS_HOST = os.environ.get('REDIS_HOST')
 REDIS_PORT = os.environ.get('REDIS_PORT')
+
+RABBITMQ_HOST = os.environ.get('RABBITMQ_HOST')
+RABBITMQ_DEFAULT_USER = os.environ.get('RABBITMQ_DEFAULT_USER')
+RABBITMQ_DEFAULT_PASS = os.environ.get('RABBITMQ_DEFAULT_PASS')

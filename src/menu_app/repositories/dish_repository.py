@@ -1,3 +1,4 @@
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 from models.models import Dish, Menu, SubMenu
@@ -9,17 +10,21 @@ from .base_repository import BaseRepository
 class DishRepository(BaseRepository):
     """Репозиторий для модели Dish"""
 
-    def get_dish_list(
+    async def get_dish_list(
         self,
         menu_id: int,
         submenu_id: int
     ) -> list[Dish]:
         """Возвращает список блюд из подменю"""
-        return self.session.query(Dish).\
-            join(SubMenu, Dish.submenu_id == submenu_id).\
-            join(Menu, SubMenu.menu_id == menu_id).all()
+        result = await self.session.execute(
+            select(Dish).
+            join(SubMenu, Dish.submenu_id == submenu_id).
+            join(Menu, SubMenu.menu_id == menu_id)
+        )
+        result = [_tuple[0] for _tuple in result.all()]
+        return result
 
-    def create_dish(
+    async def create_dish(
         self,
         new_dish: DishCreate,
         submenu_id: int
@@ -29,42 +34,45 @@ class DishRepository(BaseRepository):
         dish_obj.submenu_id = submenu_id
         self.session.add(dish_obj)
         try:
-            self.session.commit()
+            await self.session.commit()
         except IntegrityError:
-            self.session.rollback()
+            await self.session.rollback()
             raise ValueError('Ошибка при сохранении объекта')
         return dish_obj
 
-    def get_dish_by_id(
+    async def get_dish_by_id(
         self, menu_id: int,
         submenu_id: int, dish_id: int
     ) -> Dish:
         """Возвращает блюдо"""
-        return self.session.query(Dish).\
-            join(SubMenu, Dish.submenu_id == submenu_id).\
-            join(Menu, SubMenu.menu_id == menu_id).\
-            filter(Dish.id == dish_id).one()
+        result = await self.session.execute(
+            select(Dish).
+            join(SubMenu, Dish.submenu_id == submenu_id).
+            join(Menu, SubMenu.menu_id == menu_id).
+            filter(Dish.id == dish_id)
+        )
+        return result.one()[0]
 
-    def update_dish_by_id(
+    async def update_dish_by_id(
         self, menu_id: int, submenu_id: int,
         dish_id: int, item: DishCreate
     ) -> Dish:
         """Обновляет блюдо"""
-        dish_obj = self.get_dish_by_id(menu_id, submenu_id, dish_id)
+        dish_obj = await self.get_dish_by_id(menu_id, submenu_id, dish_id)
         for key, value in item.model_dump().items():
             setattr(dish_obj, key, value)
         try:
-            self.session.commit()
+            await self.session.commit()
         except IntegrityError:
-            self.session.rollback()
+            self.session.execute.rollback()
             raise ValueError('Ошибка при сохранении объекта')
         return dish_obj
 
-    def delete_dish_by_id(
+    async def delete_dish_by_id(
         self, menu_id: int,
         submenu_id: int, dish_id: int
     ) -> None:
         """Удаляет блюдо"""
-        dish_obj = self.get_dish_by_id(menu_id, submenu_id, dish_id)
-        self.session.delete(dish_obj)
-        self.session.commit()
+        dish_obj = await self.get_dish_by_id(menu_id, submenu_id, dish_id)
+        await self.session.delete(dish_obj)
+        await self.session.commit()

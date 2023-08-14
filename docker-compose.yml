@@ -29,19 +29,21 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+    ports:
+      - 6379:6379
     restart: always
 
   app:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: fastapi_app
     env_file:
       - .env
-    container_name: fastapi_app
     command: >
       sh -c "alembic upgrade head
-            cd src
-            uvicorn main:app --host 0.0.0.0 --port 8000"
+             cd src
+             uvicorn main:app --host 0.0.0.0 --port 8000"
     ports:
       - 8000:8000
     depends_on:
@@ -49,6 +51,29 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+
+  rabbitmq:
+    container_name: rabbitmq_app
+    image: "rabbitmq:3-alpine"
+    env_file:
+      - .env
+    ports:
+      - 5672:5672
+
+  celery:
+    build:
+      context: .
+    env_file:
+      - .env
+    container_name: celery_app
+    command: >
+      sh -c "cd src
+             celery -A menu_app.tasks.tasks:celery beat --loglevel=info"
+    volumes:
+      - ./admin/Menu.xlsx:/admin/Menu.xlsx
+    depends_on:
+      - rabbitmq
+
 
 volumes:
   postgres_data:

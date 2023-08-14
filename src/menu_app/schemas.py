@@ -33,7 +33,7 @@ class DishCreate(AbstractEntity):
             decimal_price = Decimal(value).quantize(Decimal('0.01'))
         except InvalidOperation:
             raise ValueError('price is invalid')
-        return decimal_price
+        return str(decimal_price)
 
 
 class MenuGet(MenuCreate, IdMixin):
@@ -47,3 +47,12 @@ class SubMenuGet(SubMenuCreate, IdMixin):
 
 class DishGet(DishCreate, IdMixin):
     pass
+
+
+class SubMenuWithNestedDishes(SubMenuCreate, IdMixin):
+    dishes: list[DishGet]
+
+
+class MenuWithNestedSubMenus(MenuCreate, IdMixin):
+
+    submenus: list[SubMenuWithNestedDishes]

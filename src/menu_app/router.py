@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from menu_appservices.dish_service import DishService
 from sqlalchemy.orm.exc import NoResultFound
 
-from .schemas import DishCreate, DishGet, MenuCreate, MenuGet, SubMenuCreate, SubMenuGet
-from .services.dish_service import DishService
-from .services.menu_service import MenuService
-from .services.submenu_service import SubMenuService
+from menu_app import schemas
+from menu_app.services.menu_service import MenuService
+from menu_app.services.submenu_service import SubMenuService
 
 menu_router: APIRouter = APIRouter(
     prefix='/menus',
@@ -12,19 +12,30 @@ menu_router: APIRouter = APIRouter(
 )
 
 
-@menu_router.get('/', response_model=list[MenuGet])
-def menu_list(menu_service: MenuService = Depends(MenuService)):
-    return menu_service.get_menu_list_with_counts()
+@menu_router.get('', response_model=list[schemas.MenuGet])
+async def menu_list(menu_service: MenuService = Depends(MenuService)):
+    return await menu_service.get_menu_list_with_counts()
 
 
-@menu_router.post('/', status_code=status.HTTP_201_CREATED,
-                  response_model=MenuGet)
-def menu_create(
-    new_menu: MenuCreate,
+@menu_router.get(
+    '/all',
+    response_model=list[schemas.MenuWithNestedSubMenus]
+)
+async def get_all(menu_service: MenuService = Depends(MenuService)):
+    return await menu_service.get_all_list()
+
+
+@menu_router.post(
+    '',
+    status_code=status.HTTP_201_CREATED,
+    response_model=schemas.MenuGet
+)
+async def menu_create(
+    new_menu: schemas.MenuCreate,
     menu_service: MenuService = Depends(MenuService)
 ):
     try:
-        menu_obj = menu_service.create_menu(new_menu)
+        menu_obj = await menu_service.create_menu(new_menu)
     except ValueError:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -32,13 +43,13 @@ def menu_create(
     return menu_obj
 
 
-@menu_router.get('/{menu_id}', response_model=MenuGet)
-def menu_detail(
+@menu_router.get('/{menu_id}', response_model=schemas.MenuGet)
+async def menu_detail(
     menu_id: int,
     menu_service: MenuService = Depends(MenuService)
 ):
     try:
-        menu_obj = menu_service.get_menu_with_counts(menu_id)
+        menu_obj = await menu_service.get_menu_with_counts(menu_id)
     except NoResultFound:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -47,14 +58,14 @@ def menu_detail(
     return menu_obj
 
 
-@menu_router.patch('/{menu_id}', response_model=MenuGet)
-def menu_patch(
-    menu: MenuCreate,
+@menu_router.patch('/{menu_id}', response_model=schemas.MenuGet)
+async def menu_patch(
+    menu: schemas.MenuCreate,
     menu_id: int,
     menu_service: MenuService = Depends(MenuService)
 ):
     try:
-        menu_obj = menu_service.update_menu_by_id(menu_id, menu)
+        menu_obj = await menu_service.update_menu_by_id(menu_id, menu)
     except (ValueError, NoResultFound):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -63,12 +74,12 @@ def menu_patch(
 
 
 @menu_router.delete('/{menu_id}')
-def menu_delete(
+async def menu_delete(
     menu_id: int,
     menu_service: MenuService = Depends(MenuService)
 ):
     try:
-        menu_service.delete_menu_by_id(menu_id)
+        await menu_service.delete_menu_by_id(menu_id)
     except NoResultFound:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -77,24 +88,30 @@ def menu_delete(
     return {'detail': 'success'}
 
 
-@menu_router.get('/{menu_id}/submenus', response_model=list[SubMenuGet])
-def submenu_list(
+@menu_router.get(
+    '/{menu_id}/submenus',
+    response_model=list[schemas.SubMenuGet]
+)
+async def submenu_list(
     menu_id: int,
     submenu_service: SubMenuService = Depends(SubMenuService)
 ):
-    return submenu_service.\
+    return await submenu_service.\
         get_submenu_list_with_dishes_count(menu_id)
 
 
-@menu_router.post('/{menu_id}/submenus', status_code=status.HTTP_201_CREATED,
-                  response_model=SubMenuGet)
-def submenu_create(
+@menu_router.post(
+    '/{menu_id}/submenus',
+    status_code=status.HTTP_201_CREATED,
+    response_model=schemas.SubMenuGet
+)
+async def submenu_create(
     menu_id: int,
-    new_submenu: SubMenuCreate,
+    new_submenu: schemas.SubMenuCreate,
     submenu_service: SubMenuService = Depends(SubMenuService)
 ):
     try:
-        submenu_obj = submenu_service.\
+        submenu_obj = await submenu_service.\
             create_submenu(new_submenu, menu_id)
     except ValueError:
         raise HTTPException(
@@ -103,14 +120,17 @@ def submenu_create(
     return submenu_obj
 
 
-@menu_router.get('/{menu_id}/submenus/{submenu_id}', response_model=SubMenuGet)
-def submenu_detail(
+@menu_router.get(
+    '/{menu_id}/submenus/{submenu_id}',
+    response_model=schemas.SubMenuGet
+)
+async def submenu_detail(
     menu_id: int,
     submenu_id: int,
     submenu_service: SubMenuService = Depends(SubMenuService)
 ):
     try:
-        submenu_obj = submenu_service.\
+        submenu_obj = await submenu_service.\
             get_submenu_with_dishes_count(menu_id, submenu_id)
     except NoResultFound:
         raise HTTPException(
@@ -120,15 +140,18 @@ def submenu_detail(
     return submenu_obj
 
 
-@menu_router.patch('/{menu_id}/submenus/{submenu_id}', response_model=SubMenuGet)
-def submenu_patch(
-    submenu: SubMenuCreate,
+@menu_router.patch(
+    '/{menu_id}/submenus/{submenu_id}',
+    response_model=schemas.SubMenuGet
+)
+async def submenu_patch(
+    submenu: schemas.SubMenuCreate,
     menu_id: int,
     submenu_id: int,
     submenu_service: SubMenuService = Depends(SubMenuService)
 ):
     try:
-        submenu_obj = submenu_service.\
+        submenu_obj = await submenu_service.\
             update_submenu_by_id(menu_id, submenu_id, submenu)
     except (ValueError, NoResultFound):
         raise HTTPException(
@@ -138,13 +161,13 @@ def submenu_patch(
 
 
 @menu_router.delete('/{menu_id}/submenus/{submenu_id}')
-def submenu_delete(
+async def submenu_delete(
     menu_id: int,
     submenu_id: int,
     submenu_service: SubMenuService = Depends(SubMenuService)
 ):
     try:
-        submenu_service.\
+        await submenu_service.\
             delete_submenu_by_id(menu_id, submenu_id)
     except NoResultFound:
         raise HTTPException(
@@ -154,27 +177,33 @@ def submenu_delete(
     return {'detail': 'success'}
 
 
-@menu_router.get('/{menu_id}/submenus/{submenu_id}/dishes',
-                 response_model=list[DishGet])
-def dish_list(
+@menu_router.get(
+    '/{menu_id}/submenus/{submenu_id}/dishes',
+    response_model=list[schemas.DishGet]
+)
+async def dish_list(
     menu_id: int,
     submenu_id: int,
     dish_service: DishService = Depends(DishService)
 ):
-    return dish_service\
-        .get_dish_list(menu_id, submenu_id)
+    result = await dish_service.\
+        get_dish_list(menu_id, submenu_id)
+    return result
 
 
-@menu_router.post('/{menu_id}/submenus/{submenu_id}/dishes',
-                  status_code=status.HTTP_201_CREATED, response_model=DishGet)
-def dish_create(
+@menu_router.post(
+    '/{menu_id}/submenus/{submenu_id}/dishes',
+    status_code=status.HTTP_201_CREATED,
+    response_model=schemas.DishGet
+)
+async def dish_create(
     menu_id: int,
     submenu_id: int,
-    new_dish: DishCreate,
+    new_dish: schemas.DishCreate,
     dish_service: DishService = Depends(DishService)
 ):
     try:
-        dish_obj = dish_service.\
+        dish_obj = await dish_service.\
             create_dish(new_dish, menu_id, submenu_id)
     except ValueError:
         raise HTTPException(
@@ -183,16 +212,18 @@ def dish_create(
     return dish_obj
 
 
-@menu_router.get('/{menu_id}/submenus/{submenu_id}/dishes/{dish_id}',
-                 response_model=DishGet)
-def dish_detail(
+@menu_router.get(
+    '/{menu_id}/submenus/{submenu_id}/dishes/{dish_id}',
+    response_model=schemas.DishGet
+)
+async def dish_detail(
     menu_id: int,
     submenu_id: int,
     dish_id: int,
     dish_service: DishService = Depends(DishService)
 ):
     try:
-        dish_obj = dish_service.\
+        dish_obj = await dish_service.\
             get_dish_by_id(menu_id, submenu_id, dish_id)
     except NoResultFound:
         raise HTTPException(
@@ -202,17 +233,19 @@ def dish_detail(
     return dish_obj
 
 
-@menu_router.patch('/{menu_id}/submenus/{submenu_id}/dishes/{dish_id}',
-                   response_model=DishGet)
-def dish_patch(
-    dish: DishCreate,
+@menu_router.patch(
+    '/{menu_id}/submenus/{submenu_id}/dishes/{dish_id}',
+    response_model=schemas.DishGet
+)
+async def dish_patch(
+    dish: schemas.DishCreate,
     menu_id: int,
     submenu_id: int,
     dish_id: int,
     dish_service: DishService = Depends(DishService)
 ):
     try:
-        dish_obj = dish_service.\
+        dish_obj = await dish_service.\
             update_dish_by_id(menu_id, submenu_id, dish_id, dish)
     except (ValueError, NoResultFound):
         raise HTTPException(
@@ -222,14 +255,14 @@ def dish_patch(
 
 
 @menu_router.delete('/{menu_id}/submenus/{submenu_id}/dishes/{dish_id}')
-def dish_delete(
+async def dish_delete(
     menu_id: int,
     submenu_id: int,
     dish_id: int,
     dish_service: DishService = Depends(DishService)
 ):
     try:
-        dish_service.delete_dish_by_id(menu_id, submenu_id, dish_id)
+        await dish_service.delete_dish_by_id(menu_id, submenu_id, dish_id)
     except NoResultFound:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
