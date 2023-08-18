@@ -31,7 +31,7 @@ app.dependency_overrides[get_async_session] = override_get_async_session
 
 
 @pytest.fixture(autouse=True, scope='session')
-async def setup_db():
+async def setup_db() -> None:
     assert MODE == 'TEST'
     redis_cli = RedisBackend()
     await redis_cli.flushdb()
@@ -45,7 +45,7 @@ async def setup_db():
 
 
 @pytest.fixture(scope='module')
-async def current_menu():
+async def current_menu() -> Menu:
     session_generator = override_get_async_session()
     session = await anext(session_generator)
     menu_obj = await session.execute(select(Menu))

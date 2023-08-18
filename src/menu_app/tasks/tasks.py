@@ -1,4 +1,3 @@
-import asyncio
 from datetime import timedelta
 
 from celery import Celery
@@ -15,7 +14,7 @@ celery = Celery('tasks', broker_url=broker_url)
 
 @celery.task
 def update_db_every_15_seconds():
-    asyncio.run(update_db_from_excel)
+    update_db_from_excel()
 
 
 celery.conf.beat_schedule = {

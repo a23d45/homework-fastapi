@@ -37,7 +37,7 @@ class ExcelBackend:
             ).get(cell_number)
         )
 
-    def get_menu_description(self, cell_number: int) -> str:
+    def get_menu_description(self, cell_number: int) -> str | None:
         """Возвращает описание меню"""
         return self.excel_data.get(
             self.MENU_DESCRIPTION_COLUMN
@@ -51,7 +51,7 @@ class ExcelBackend:
             ).get(cell_number)
         )
 
-    def get_submenu_description(self, cell_number: int) -> str:
+    def get_submenu_description(self, cell_number: int) -> str | None:
         """Возвращает описание подменю"""
         return self.excel_data.get(
             self.SUBMENU_DESCRIPTION_COLUMN
@@ -65,13 +65,13 @@ class ExcelBackend:
             ).get(cell_number)
         )
 
-    def get_dish_description(self, cell_number: int) -> str:
+    def get_dish_description(self, cell_number: int) -> str | None:
         """Возвращает описание блюда"""
         return self.excel_data.get(
             self.DISH_DESCRIPTION_COLUMN
         ).get(cell_number)
 
-    def get_dish_price(self, cell_number: int) -> str:
+    def get_dish_price(self, cell_number: int) -> str | None:
         """Возвращает строку стоимости блюда"""
         return str(
             self.excel_data.get(
@@ -85,7 +85,7 @@ class ExcelBackend:
         menu_title_column = self.excel_data.get(self.MENU_TITLE_COLUMN)
         for cell_number, value in menu_title_column.items():
             if isinstance(value, str):
-                menu_dict = {}
+                menu_dict: dict[str, int | str | None] = {}
                 menu_dict['id'] = self.get_menu_id(cell_number)
                 menu_dict['title'] = value
                 menu_dict['description'] =\
@@ -108,7 +108,7 @@ class ExcelBackend:
                 current_menu_id = self.get_menu_id(cell_number)
 
             if isinstance(value, str) and isinstance(left_cell, int):
-                submenu_dict = {}
+                submenu_dict: dict[str, int | str | None] = {}
                 submenu_dict['id'] =\
                     self.get_submenu_id(cell_number)
                 submenu_dict['title'] = value
@@ -133,7 +133,7 @@ class ExcelBackend:
                 current_submenu_id = self.get_submenu_id(cell_number)
 
             if isinstance(value, str) and isinstance(left_cell, int):
-                dish_dict = {}
+                dish_dict: dict[str, int | str | None] = {}
                 dish_dict['id'] =\
                     self.get_dish_id(cell_number)
                 dish_dict['title'] = value

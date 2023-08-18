@@ -2,6 +2,8 @@ import json
 
 from httpx import AsyncClient
 
+from src.models.models import Dish, Menu, SubMenu
+
 prefix = 'api/v1'
 
 
@@ -27,7 +29,10 @@ async def test_create_menu(client: AsyncClient):
     assert response_data['description'] == data['description']
 
 
-async def test_get_submenu_empty_list(client: AsyncClient, current_menu):
+async def test_get_submenu_empty_list(
+    client: AsyncClient,
+    current_menu: Menu
+):
     response = await client.get(
         f'{prefix}/menus/{current_menu.id}/submenus'
     )
@@ -35,7 +40,7 @@ async def test_get_submenu_empty_list(client: AsyncClient, current_menu):
     assert response.json() == []
 
 
-async def test_create_submenu(client: AsyncClient, current_menu):
+async def test_create_submenu(client: AsyncClient, current_menu: Menu):
     data = {
         'title': 'SubMenu 1',
         'description': 'Some description',
@@ -53,8 +58,8 @@ async def test_create_submenu(client: AsyncClient, current_menu):
 
 async def test_get_dish_empty_list(
     client: AsyncClient,
-    current_menu,
-    current_submenu
+    current_menu: Menu,
+    current_submenu: SubMenu
 ):
     response = await client.get(
         f'{prefix}/menus/{current_menu.id}'
@@ -66,8 +71,8 @@ async def test_get_dish_empty_list(
 
 async def test_create_dish(
     client: AsyncClient,
-    current_menu,
-    current_submenu
+    current_menu: Menu,
+    current_submenu: SubMenu
 ):
     data = {
         'title': 'Dish 1',
@@ -113,7 +118,7 @@ async def test_get_menu_list(client: AsyncClient):
     assert len(response_data) == 1
 
 
-async def test_get_menu_detail(client: AsyncClient, current_menu):
+async def test_get_menu_detail(client: AsyncClient, current_menu: Menu):
     response = await client.get(
         f'{prefix}/menus/{current_menu.id}'
     )
@@ -124,7 +129,7 @@ async def test_get_menu_detail(client: AsyncClient, current_menu):
     assert current_menu.description == response_data['description']
 
 
-async def test_update_menu(client: AsyncClient, current_menu):
+async def test_update_menu(client: AsyncClient, current_menu: Menu):
     data = {
         'title': 'Updated menu',
         'description': 'Updated description'
@@ -140,7 +145,7 @@ async def test_update_menu(client: AsyncClient, current_menu):
     assert data['description'] == response_data['description']
 
 
-async def test_get_submenu_list(client: AsyncClient, current_menu):
+async def test_get_submenu_list(client: AsyncClient, current_menu: Menu):
     response = await client.get(
         f'{prefix}/menus/{current_menu.id}/submenus'
     )
@@ -151,8 +156,8 @@ async def test_get_submenu_list(client: AsyncClient, current_menu):
 
 async def test_get_submenu_detail(
     client: AsyncClient,
-    current_menu,
-    current_submenu
+    current_menu: Menu,
+    current_submenu: SubMenu
 ):
     response = await client.get(
         f'{prefix}/menus/{current_menu.id}'
@@ -167,8 +172,8 @@ async def test_get_submenu_detail(
 
 async def test_update_submenu(
     client: AsyncClient,
-    current_menu,
-    current_submenu
+    current_menu: Menu,
+    current_submenu: SubMenu
 ):
     data = {
         'title': 'Updated submenu',
@@ -188,8 +193,8 @@ async def test_update_submenu(
 
 async def test_get_dish_list(
     client: AsyncClient,
-    current_menu,
-    current_submenu
+    current_menu: Menu,
+    current_submenu: SubMenu
 ):
     response = await client.get(
         f'{prefix}/menus/{current_menu.id}'
@@ -202,9 +207,9 @@ async def test_get_dish_list(
 
 async def test_get_dish_detail(
     client: AsyncClient,
-    current_menu,
-    current_submenu,
-    current_dish
+    current_menu: Menu,
+    current_submenu: SubMenu,
+    current_dish: Dish
 ):
     response = await client.get(
         f'{prefix}/menus/{current_menu.id}'
@@ -221,9 +226,9 @@ async def test_get_dish_detail(
 
 async def test_update_dish(
     client: AsyncClient,
-    current_menu,
-    current_submenu,
-    current_dish
+    current_menu: Menu,
+    current_submenu: SubMenu,
+    current_dish: Dish
 ):
     data = {
         'title': 'Updated dish',
@@ -246,9 +251,9 @@ async def test_update_dish(
 
 async def test_incorrect_price_update_dish(
     client: AsyncClient,
-    current_menu,
-    current_submenu,
-    current_dish
+    current_menu: Menu,
+    current_submenu: SubMenu,
+    current_dish: Dish
 ):
     data = {
         'title': 'Updated dish',
@@ -266,9 +271,9 @@ async def test_incorrect_price_update_dish(
 
 async def test_delete_dish(
     client: AsyncClient,
-    current_menu,
-    current_submenu,
-    current_dish
+    current_menu: Menu,
+    current_submenu: SubMenu,
+    current_dish: Dish
 ):
     response = await client.delete(
         f'{prefix}/menus/{current_menu.id}'
@@ -280,7 +285,11 @@ async def test_delete_dish(
     assert response_data['detail'] == 'success'
 
 
-async def test_delete_submenu(client: AsyncClient, current_menu, current_submenu):
+async def test_delete_submenu(
+    client: AsyncClient,
+    current_menu: Menu,
+    current_submenu: SubMenu
+):
     response = await client.delete(
         f'{prefix}/menus/{current_menu.id}'
         + f'/submenus/{current_submenu.id}'
@@ -290,7 +299,7 @@ async def test_delete_submenu(client: AsyncClient, current_menu, current_submenu
     assert response_data['detail'] == 'success'
 
 
-async def test_delete_menu(client: AsyncClient, current_menu):
+async def test_delete_menu(client: AsyncClient, current_menu: Menu):
     response = await client.delete(
         f'{prefix}/menus/{current_menu.id}',
     )
@@ -299,14 +308,17 @@ async def test_delete_menu(client: AsyncClient, current_menu):
     assert response_data['detail'] == 'success'
 
 
-async def test_failed_get_menu_detail(client: AsyncClient, current_menu):
+async def test_failed_get_menu_detail(
+    client: AsyncClient,
+    current_menu: Menu
+):
     response = await client.get(
         f'{prefix}/menus/{current_menu.id}'
     )
     assert response.status_code == 404
 
 
-async def test_failed_update_menu(client: AsyncClient, current_menu):
+async def test_failed_update_menu(client: AsyncClient, current_menu: Menu):
     data = {
         'title': 'Failed title',
         'description': 'Failed description'
@@ -318,7 +330,10 @@ async def test_failed_update_menu(client: AsyncClient, current_menu):
     assert response.status_code == 409
 
 
-async def test_failed_get_menu_detail(client: AsyncClient, current_menu):
+async def test_failed_get_menu_detail(
+    client: AsyncClient,
+    current_menu: Menu
+):
     response = await client.get(
         f'{prefix}/menus/{current_menu.id}'
     )
@@ -327,8 +342,8 @@ async def test_failed_get_menu_detail(client: AsyncClient, current_menu):
 
 async def test_failed_update_submenu(
     client: AsyncClient,
-    current_menu,
-    current_submenu
+    current_menu: Menu,
+    current_submenu: SubMenu
 ):
     data = {
         'title': 'Failed title',
@@ -344,8 +359,8 @@ async def test_failed_update_submenu(
 
 async def test_failed_get_submenu_detail(
     client: AsyncClient,
-    current_menu,
-    current_submenu
+    current_menu: Menu,
+    current_submenu: SubMenu
 ):
     response = await client.get(
         f'{prefix}/menus/{current_menu.id}'
@@ -356,9 +371,9 @@ async def test_failed_get_submenu_detail(
 
 async def test_failed_update_dish(
     client: AsyncClient,
-    current_menu,
-    current_submenu,
-    current_dish
+    current_menu: Menu,
+    current_submenu: SubMenu,
+    current_dish: Dish
 ):
     data = {
         'title': 'Failed title',
@@ -376,9 +391,9 @@ async def test_failed_update_dish(
 
 async def test_failed_get_dish_detail(
     client: AsyncClient,
-    current_menu,
-    current_submenu,
-    current_dish
+    current_menu: Menu,
+    current_submenu: SubMenu,
+    current_dish: Dish
 ):
     response = await client.get(
         f'{prefix}/menus/{current_menu.id}'

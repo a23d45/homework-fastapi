@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from menu_appservices.dish_service import DishService
 from sqlalchemy.orm.exc import NoResultFound
 
 from menu_app import schemas
+from menu_app.services.dish_service import DishService
 from menu_app.services.menu_service import MenuService
 from menu_app.services.submenu_service import SubMenuService
 
