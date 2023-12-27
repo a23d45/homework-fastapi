@@ -1,4 +1,4 @@
-version: "3.7"
+version: 3.7
 
 services:
   db:
@@ -51,43 +51,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-
-  rabbitmq:
-    container_name: rabbitmq_app
-    image: "rabbitmq:3-alpine"
-    env_file:
-      - .env
-    ports:
-      - 5672:5672
-
-  worker:
-    build:
-      context: .
-    env_file:
-      - .env
-    container_name: worker_app
-    command: >
-      sh -c "cd src
-             celery -A menu_app.tasks.tasks:celery worker -l info -P gevent"
-    depends_on:
-      - rabbitmq
-    volumes:
-      - /app/admin/:/app/admin/
-
-  beat:
-    build:
-      context: .
-    env_file:
-      - .env
-    container_name: beat_app
-    command: >
-      sh -c "cd src
-             celery -A menu_app.tasks.tasks:celery beat -l info"
-    depends_on:
-      - rabbitmq
-      - worker
-    volumes:
-      - /app/admin/:/app/admin/
 
 volumes:
   postgres_data:

@@ -6,6 +6,7 @@ from menu_app.services.dish_service import DishService
 from menu_app.services.menu_service import MenuService
 from menu_app.services.submenu_service import SubMenuService
 
+
 menu_router: APIRouter = APIRouter(
     prefix='/menus',
     tags=['Menu']
